@@ -20,7 +20,7 @@ void pwm_ctrl_thread_create(void)
 
     UINT err;
     err = tx_thread_create (&pwm_ctrl_thread, (CHAR *) "PWM Thread", pwm_ctrl_thread_func, (ULONG) NULL,
-                            &pwm_ctrl_thread_stack, 1024, 7, 7, 1, TX_AUTO_START);
+                            &pwm_ctrl_thread_stack, 1024, 4, 4, 1, TX_AUTO_START);
     if (TX_SUCCESS != err)
     {
         tx_startup_err_callback (&pwm_ctrl_thread, 0);

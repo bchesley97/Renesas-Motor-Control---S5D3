@@ -34,6 +34,15 @@
 #include "../src/driver/r_motor_bldc/hw/hw_motor_bldc_private.h"
 #include "r_gpt.h"
 #include "common_data.h"
+#include "ssp_features.h"
+
+/***** Ifdef to put isr in vector table *****/
+#ifndef SSP_SUPPRESS_ADC_WINDOW_ISR
+void adc_comp_isr (void);
+#define SSP_SUPPRESS_ADC_WINDOW_ISR
+SSP_VECTOR_DEFINE_CHAN(adc_comp_isr, ADC, WINDOW_A, 0);
+#endif
+
 
 //global variables
 mtr_added_ctrl_t mtr_pattern_ctrl;
@@ -85,7 +94,7 @@ uint32_t clear_ielsrn = 0x01000057; //0x057 is ACMP_HS0 source, could possible c
 
 
 void pwm_counter_overflow (void);
-
+//void adc_comp_isr(void);
 
 /***********************************************************************************************************************
  * Macro definitions
@@ -153,16 +162,14 @@ extern void (*sf_callback)(void);
 extern bool irq_handler_set;
 
 //function to change duty cycle of waveform
-void change_pwm_duty(uint32_t duty_cycle_percent)
+void change_pwm_duty(float duty_cycle_percent)
 {
-
-
     if(duty_cycle_percent > 100)
     {
         return; //basic parameter checking
     }
 
-    uint32_t duty_value_ticks = g_motors[1]->p_ctrl->pwm_period - (uint32_t)((g_motors[1]->p_ctrl->pwm_period * duty_cycle_percent)/100.0f);
+    uint32_t duty_value_ticks = g_motors[1]->p_ctrl->pwm_period - (uint32_t)(((float)g_motors[1]->p_ctrl->pwm_period * duty_cycle_percent)/100.0f);
 
     motor_ctrl_t * const p_ctrl = g_motors[1]->p_ctrl;
 
@@ -826,14 +833,16 @@ static inline void enable_dtc_elc(motor_ctrl_t * const p_ctrl)
 
 static inline void enable_adc_timer()
 {
-    //R_GPTA0->GTADTBRA = 1200; //should be around 5us after the the pwm signal goes high, 0x7bc +
-    //R_GPTA0->GTINTAD = 1; //enable A/D converter start request on GTADTRA rising compare match
+    //the top value is 0x7D0, so trigger just after the overflow
+    R_GPTA0->GTADTBRA = 0x7CF; //should be around 5us after the the pwm signal goes high, 0x7bc +
+    R_GPTA0->GTINTAD_b.ADTRADEN = 1; //enable A/D converter start request on GTADTRA down counting compare match
 
-
-    //currently not using sample and hold circuits, might need later
 
     ///configure ADC registers
      R_MSTP->MSTPCRD_b.MSTPD16 = 0; //enable writing to ADC0 registers
+     R_BSP_SoftwareDelay(1, BSP_DELAY_UNITS_MICROSECONDS);
+
+
 
      R_S12ADC0->ADCSR_b.ADCS = 0b00; //single scan mode
      R_S12ADC0->ADCSR_b.TRGE = 1;
@@ -846,25 +855,32 @@ static inline void enable_adc_timer()
 //     R_S12ADC0->ADANSA0_b.ANSA01 = 1;
 //     R_S12ADC0->ADANSA0_b.ANSA02 = 1;
 
-     R_S12ADC0->ADCER_b.ADPRC = 0b00; //12 bit accuracy. 10 bit might be used as it is faster to convert
-     R_S12ADC0->ADSTRGR_b.TRSA = 0b001001; //enables ALC_ADC00 and ELC_ADC10
 
+     R_S12ADC0->ADCER_b.ADPRC = 0b00; //12 bit accuracy. 10 bit might be used as it is faster to convert
+     R_S12ADC0->ADCER_b.ACE = 1;
+     R_S12ADC0->ADSTRGR_b.TRSA = 0b001001; //enables ELC_ADC00 and ELC_ADC10
+
+
+//     //enable sample and hold circuit
+     R_S12ADC0->ADSHCR_b.SSTSH = 24; //24 states for sample and hold time, default
+     R_S12ADC0->ADSHCR_b.SHANS0 = 0; //use the circuits for channel 0
+     R_S12ADC0->ADSHCR_b.SHANS1 = 1;
+     R_S12ADC0->ADSHCR_b.SHANS2 = 1;
 
      //ADCMPANSR0,1
      //enable compare function for the three channels 0,1,2
-     R_S12ADC0->ADCMPANSR0_b.CMPCHA00 = 1;
-     R_S12ADC0->ADCMPANSR0_b.CMPCHA01 = 1;
-     R_S12ADC0->ADCMPANSR0_b.CMPCHA02 = 1;
+     R_S12ADC0->ADCMPANSR0 = 0x0007;
 
      //0.22 V is 272.067V, so low reference value is 271, upper side is 273
-     R_S12ADC0->ADCMPDR0_b.ADCMPDR0 = 271;  //in 12 bit mode, low reference
-     R_S12ADC0->ADCMPDR1_b.ADCMPDR1 = 273; //upper reference
+     R_S12ADC0->ADCMPDR0_b.ADCMPDR0 = 270;  //in 12 bit mode, low reference
+     R_S12ADC0->ADCMPDR1_b.ADCMPDR1 = 276; //upper reference
 
-     R_S12ADC0->ADCMPCR_b.CMPAB = 0b00; //output adc120_WCMPM when window A or window B comparision conditions met. otherwise output adc120_WCMPUM
+
+     R_S12ADC0->ADCMPCR_b.CMPAB = 0; //output adc120_WCMPM when window A or window B comparision conditions met. otherwise output adc120_WCMPUM
      R_S12ADC0->ADCMPCR_b.WCMPE = 1; //enable window function, for two bounds
      R_S12ADC0->ADCMPCR_b.CMPAIE = 1; //enable ADC120_CMPAI interrupt
      R_S12ADC0->ADCMPCR_b.CMPAE = 1; //enable compare window A operation. this bit needs to be 0 before changing ADANSA0 register
-     R_S12ADC0->ADCMPCR_b.CMPAB = 1; //enable B, in manual when using only A windows
+     R_S12ADC0->ADCMPCR_b.CMPBE = 1; //enable B, in manual when using only A windows
 
      R_S12ADC0->ADCMPBNSR_b.CMPCHB = 0b111111; //do not select window B
      R_S12ADC0->ADCMPCR_b.WCMPE = 1;
@@ -874,13 +890,32 @@ static inline void enable_adc_timer()
      R_S12ADC0->ADCMPLR0_b.CMPLCHA00 = 1; //ADCMPDR0 < value < ADCMPDR1
      R_S12ADC0->ADCMPLR0_b.CMPLCHA01 = 1;
      R_S12ADC0->ADCMPLR0_b.CMPLCHA02 = 1;
+     R_S12ADC0->ADCMPLR0 = 0x0007; //ADCMPDR0 < value < ADCMPDR1 for ch0,1,2
 
+     R_S12ADC0->ADPGACR = 0x9999;
+     R_S12ADC0->ADPGADCR0 = 0;
+
+     //wait 1us
+     R_S12ADC0->ADANSA0 = 0x0007;
 
 
      //link with ELC
      R_ELC->ELSRnRC0[8].ELSRn_b.ELS = 0xB8; //ELC_AD00 register connected to A/D converter start request A
-}
 
+     //enable interrupt when the window compare match occurs
+     ssp_feature_t ssp_feature = {{(ssp_ip_t) 0}};
+     ssp_feature.channel = 0;
+     ssp_feature.unit = 0U;
+     ssp_feature.id = SSP_IP_ADC;
+
+     fmi_event_info_t event_info = {(IRQn_Type) 0U};
+     g_fmi_on_fmi.eventInfoGet(&ssp_feature, SSP_SIGNAL_ADC_WINDOW_A, &event_info);
+     NVIC_SetPriority(event_info.irq, 2);
+
+     R_BSP_IrqStatusClear(event_info.irq);
+     NVIC_ClearPendingIRQ(event_info.irq);
+     NVIC_EnableIRQ(event_info.irq);
+}
 
 
 /***********************************************************************************************************************
@@ -991,9 +1026,10 @@ ssp_err_t R_Motor_BLDC_Open (motor_ctrl_t * const p_ctrl, motor_cfg_t * const p_
             NVIC_ClearPendingIRQ(p_ctrl->irq);
             NVIC_EnableIRQ(p_ctrl->irq);
 
+            enable_adc_timer();
 
             /* enable the DTC linked with the ELC for closed loop control */
-           enable_dtc_elc(p_ctrl); //enable dtc only for one motor
+           //enable_dtc_elc(p_ctrl); //enable dtc only for one motor
 
         }
 
@@ -1023,7 +1059,7 @@ ssp_err_t R_Motor_BLDC_Open (motor_ctrl_t * const p_ctrl, motor_cfg_t * const p_
 
 
 
-        change_pwm_duty(5); //change duty cycle to one percent
+        change_pwm_duty(1); //change duty cycle to one percent
 
         //set registers such that the first waveform displayed via PWM is the FIRST waveform
         p_ctrl->p_gpt_u->GTUDDTYC = pin_ctrl_u[0];

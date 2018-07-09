@@ -15,7 +15,7 @@ void pwm_ctrl_thread_entry(void)
     tx_thread_sleep (5); //update every 10 ms, less for closed loop control (faster speeds)
 
     uint32_t acceleration_counter = 0;
-    uint8_t pwm_duty_cycle = 1; //in percent, this is the starting value
+    float pwm_duty_cycle = 1; //in percent, this is the starting value
 
     while (1)
     {
@@ -29,16 +29,16 @@ void pwm_ctrl_thread_entry(void)
                 p_mtr_pattern_ctrl->vel_accel.velocity -= p_mtr_pattern_ctrl->vel_accel.acceleration; //add acceleration to the velocity (subtracting because these are in terms of pwm cycles)
 
                 acceleration_counter++;
-                if(acceleration_counter > 80)
+                if(acceleration_counter > 10)
                 {
                     acceleration_counter = 0;
                     change_pwm_duty(pwm_duty_cycle);
-                    pwm_duty_cycle+=1;
+                    pwm_duty_cycle+= 0.1;
 
                 }
 
 
-                tx_thread_sleep (10); //update every 500 ms
+                tx_thread_sleep (1); //update every 500 ms
             }
 
             else if(p_pins_ctrl == &pins_ctrl[5]) //only switch control to closed loop when the pattern is the last in the sequence

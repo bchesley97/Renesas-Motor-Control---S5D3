@@ -72,7 +72,8 @@ synergy/ssp/src/driver/changed_src_files/r_motor_bldc.o: \
  C:\Users\britton.chesley\e2_studio\workspace\BLDC_Motor_Control\synergy\ssp\inc\driver\api/r_elc_api.h \
  C:\Users\britton.chesley\e2_studio\workspace\BLDC_Motor_Control\synergy\ssp\inc\driver\instances/r_cgc.h \
  C:\Users\britton.chesley\e2_studio\workspace\BLDC_Motor_Control\synergy_cfg\ssp_cfg\driver/r_cgc_cfg.h \
- C:\Users\britton.chesley\e2_studio\workspace\BLDC_Motor_Control\synergy\ssp\inc\driver\api/r_cgc_api.h
+ C:\Users\britton.chesley\e2_studio\workspace\BLDC_Motor_Control\synergy\ssp\inc\driver\api/r_cgc_api.h \
+ C:\Users\britton.chesley\e2_studio\workspace\BLDC_Motor_Control\synergy\ssp\inc/ssp_features.h
 
 C:\Users\britton.chesley\e2_studio\workspace\BLDC_Motor_Control\synergy\ssp\inc\driver\api\api_changed/r_motor_api_changed.h:
 
@@ -219,3 +220,5 @@ C:\Users\britton.chesley\e2_studio\workspace\BLDC_Motor_Control\synergy\ssp\inc\
 C:\Users\britton.chesley\e2_studio\workspace\BLDC_Motor_Control\synergy_cfg\ssp_cfg\driver/r_cgc_cfg.h:
 
 C:\Users\britton.chesley\e2_studio\workspace\BLDC_Motor_Control\synergy\ssp\inc\driver\api/r_cgc_api.h:
+
+C:\Users\britton.chesley\e2_studio\workspace\BLDC_Motor_Control\synergy\ssp\inc/ssp_features.h:

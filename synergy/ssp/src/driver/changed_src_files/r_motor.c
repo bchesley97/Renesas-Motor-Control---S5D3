@@ -44,8 +44,13 @@ extern trap_phase_state_t trap_pattern[6];
 extern phase_pin_ctrl_t *p_pins_ctrl;
 extern phase_pin_ctrl_t pins_ctrl[6];
 
+
+ioport_level_t level = IOPORT_LEVEL_LOW;
+
+
 /* Interrupt handler for high speed motor control loops */
 void pwm_counter_overflow (void);
+
 
 
 void pwm_counter_overflow (void)
@@ -79,9 +84,9 @@ void pwm_counter_overflow (void)
     /* Keep track of the number of PWM interrupts (control cycles) */
     pwm_cycle_cntr++;
 
+
     if(pwm_cycle_cntr >= p_mtr_pattern_ctrl->vel_accel.velocity && p_mtr_pattern_ctrl->ctrl_type == OPEN_LOOP_CONTROL)
     {
-
         pwm_cycle_cntr = 0;
 
         //update pointer holding data about pin levels for specific trapezoidal commutation
@@ -107,6 +112,29 @@ void pwm_counter_overflow (void)
         //update W timer
         trap_motor->p_ctrl->p_gpt_w->GTUDDTYC = pins_w;
 
+        R_S12ADC0->ADANSA0 = 0;
+        if(pins_u == 0x02020001)
+        {
+            R_S12ADC0->ADCMPCR_b.CMPAE = 0;
+            R_S12ADC0->ADANSA0 = 0x0001;
+            R_S12ADC0->ADCMPCR_b.CMPAE = 1;
+        }
+
+        else if(pins_v == 0x02020001)
+        {
+            R_S12ADC0->ADCMPCR_b.CMPAE = 0;
+            R_S12ADC0->ADANSA0 = 0x0002;
+            R_S12ADC0->ADCMPCR_b.CMPAE = 1;
+        }
+
+        else if(pins_w == 0x02020001)
+        {
+            R_S12ADC0->ADCMPCR_b.CMPAE = 0;
+            R_S12ADC0->ADANSA0 = 0x0004;
+            R_S12ADC0->ADCMPCR_b.CMPAE = 1;
+        }
+
+
     }
     else if (p_mtr_pattern_ctrl == CLOSED_LOOP_CONTROL)
     {
@@ -124,4 +152,27 @@ void pwm_counter_overflow (void)
 } /* End of function gpt_counter_overflow_common */
 
 
+void adc_comp_isr();
+void adc_comp_isr()
+{
+    SF_CONTEXT_SAVE
+    ssp_vector_info_t * p_vector_info = NULL;
+    IRQn_Type irq = R_SSP_CurrentIrqGet();
+    R_SSP_VectorInfoGet(irq, &p_vector_info);
+
+    if(level == IOPORT_LEVEL_LOW)
+    {
+        level = IOPORT_LEVEL_HIGH;
+    }
+    else
+    {
+        level = IOPORT_LEVEL_LOW;
+    }
+    g_ioport.p_api->pinWrite(IOPORT_PORT_05_PIN_00, level); //toggle pin at interrupt for change commutation
+
+
+    /** Clear pending IRQ to make sure it doesn't fire again after exiting */
+    R_BSP_IrqStatusClear(irq);
+    SF_CONTEXT_RESTORE
+}
 

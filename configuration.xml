@@ -373,7 +373,7 @@
       <property id="_symbol" value="pwm_ctrl_thread"/>
       <property id="rtos.threadx.thread.name" value="PWM Thread"/>
       <property id="rtos.threadx.thread.stack" value="1024"/>
-      <property id="rtos.threadx.thread.priority" value="7"/>
+      <property id="rtos.threadx.thread.priority" value="4"/>
       <property id="rtos.threadx.thread.autostart" value="rtos.threadx.thread.autostart.enabled"/>
       <property id="rtos.threadx.thread.timeslice" value="1"/>
     </context>

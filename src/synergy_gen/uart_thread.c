@@ -8,8 +8,8 @@ static uint8_t uart_thread_stack[1024] BSP_PLACE_IN_SECTION_V2(".stack.uart_thre
 void tx_startup_err_callback(void *p_instance, void *p_data);
 void tx_startup_common_init(void);
 #if (BSP_IRQ_DISABLED) != BSP_IRQ_DISABLED
-#if !defined(SSP_SUPPRESS_ISR_g_transfer0) && !defined(SSP_SUPPRESS_ISR_DTCELC_EVENT_SCI0_TXI)
-#define DTC_ACTIVATION_SRC_ELC_EVENT_SCI0_TXI
+#if !defined(SSP_SUPPRESS_ISR_g_transfer0) && !defined(SSP_SUPPRESS_ISR_DTCELC_EVENT_SCI8_TXI)
+#define DTC_ACTIVATION_SRC_ELC_EVENT_SCI8_TXI
 #if defined(DTC_ACTIVATION_SRC_ELC_EVENT_ELC_SOFTWARE_EVENT_0) && !defined(DTC_VECTOR_DEFINED_SOFTWARE_EVENT_0)
 SSP_VECTOR_DEFINE(elc_software_event_isr, ELC, SOFTWARE_EVENT_0);
 #define DTC_VECTOR_DEFINED_SOFTWARE_EVENT_0
@@ -36,7 +36,7 @@ transfer_info_t g_transfer0_info =
   .length = 0, };
 const transfer_cfg_t g_transfer0_cfg =
 { .p_info = &g_transfer0_info,
-  .activation_source = ELC_EVENT_SCI0_TXI,
+  .activation_source = ELC_EVENT_SCI8_TXI,
   .auto_enable = false,
   .p_callback = NULL,
   .p_context = &g_transfer0,
@@ -45,23 +45,23 @@ const transfer_cfg_t g_transfer0_cfg =
 const transfer_instance_t g_transfer0 =
 { .p_ctrl = &g_transfer0_ctrl, .p_cfg = &g_transfer0_cfg, .p_api = &g_transfer_on_dtc };
 #if (12) != BSP_IRQ_DISABLED
-#if !defined(SSP_SUPPRESS_ISR_g_uart0) && !defined(SSP_SUPPRESS_ISR_SCI0)
-SSP_VECTOR_DEFINE_CHAN(sci_uart_rxi_isr, SCI, RXI, 0);
+#if !defined(SSP_SUPPRESS_ISR_g_uart0) && !defined(SSP_SUPPRESS_ISR_SCI8)
+SSP_VECTOR_DEFINE_CHAN(sci_uart_rxi_isr, SCI, RXI, 8);
 #endif
 #endif
 #if (12) != BSP_IRQ_DISABLED
-#if !defined(SSP_SUPPRESS_ISR_g_uart0) && !defined(SSP_SUPPRESS_ISR_SCI0)
-SSP_VECTOR_DEFINE_CHAN(sci_uart_txi_isr, SCI, TXI, 0);
+#if !defined(SSP_SUPPRESS_ISR_g_uart0) && !defined(SSP_SUPPRESS_ISR_SCI8)
+SSP_VECTOR_DEFINE_CHAN(sci_uart_txi_isr, SCI, TXI, 8);
 #endif
 #endif
 #if (12) != BSP_IRQ_DISABLED
-#if !defined(SSP_SUPPRESS_ISR_g_uart0) && !defined(SSP_SUPPRESS_ISR_SCI0)
-SSP_VECTOR_DEFINE_CHAN(sci_uart_tei_isr, SCI, TEI, 0);
+#if !defined(SSP_SUPPRESS_ISR_g_uart0) && !defined(SSP_SUPPRESS_ISR_SCI8)
+SSP_VECTOR_DEFINE_CHAN(sci_uart_tei_isr, SCI, TEI, 8);
 #endif
 #endif
 #if (BSP_IRQ_DISABLED) != BSP_IRQ_DISABLED
-#if !defined(SSP_SUPPRESS_ISR_g_uart0) && !defined(SSP_SUPPRESS_ISR_SCI0)
-SSP_VECTOR_DEFINE_CHAN(sci_uart_eri_isr, SCI, ERI, 0);
+#if !defined(SSP_SUPPRESS_ISR_g_uart0) && !defined(SSP_SUPPRESS_ISR_SCI8)
+SSP_VECTOR_DEFINE_CHAN(sci_uart_eri_isr, SCI, ERI, 8);
 #endif
 #endif
 sci_uart_instance_ctrl_t g_uart0_ctrl;
@@ -74,7 +74,7 @@ const uart_on_sci_cfg_t g_uart0_cfg_extend =
 
 /** UART interface configuration */
 const uart_cfg_t g_uart0_cfg =
-{ .channel = 0, .baud_rate = 9600, .data_bits = UART_DATA_BITS_8, .parity = UART_PARITY_OFF, .stop_bits =
+{ .channel = 8, .baud_rate = 9600, .data_bits = UART_DATA_BITS_8, .parity = UART_PARITY_OFF, .stop_bits =
           UART_STOP_BITS_1,
   .ctsrts_en = false, .p_callback = NULL, .p_context = &g_uart0, .p_extend = &g_uart0_cfg_extend,
 #define SYNERGY_NOT_DEFINED (1)                        
