@@ -105,16 +105,17 @@ typedef struct mtr_added_ctrl
     trap_phase_state_t * p_trap_pattern; //set this equal to &trap_pattern[0] in initialization
     mtr_pattern_vel_accel_t vel_accel;
     motor_running_state ctrl_type;
+    float pwm_duty_cycle;
 }mtr_added_ctrl_t;
 
 /** Global variable for pattern pointer since cant access header file to change the ctrl struct **/
 
 
 /*** Defines ***/
-#define CONTROL_SWITCH_VELOCITY (67*3)   //velocity to switch from open to closed loop control at 3,000 rpms. around 67 pwm periods at a rate of 20KHz
+#define CONTROL_SWITCH_VELOCITY (67*2)   //velocity to switch from open to closed loop control at 3,000 rpms. around 67 pwm periods at a rate of 20KHz
 
 void change_pwm_duty(float duty_cycle_percent);
-
+void reset_command();
 /*******************************************************************************************************************//**
  * @} (end defgroup TIMER_API)
  **********************************************************************************************************************/

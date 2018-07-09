@@ -51,7 +51,9 @@ ioport_level_t level = IOPORT_LEVEL_LOW;
 /* Interrupt handler for high speed motor control loops */
 void pwm_counter_overflow (void);
 
-
+    pin_duty_state pins_u;
+     pin_duty_state pins_v;
+     pin_duty_state pins_w;
 
 void pwm_counter_overflow (void)
 {
@@ -84,7 +86,6 @@ void pwm_counter_overflow (void)
     /* Keep track of the number of PWM interrupts (control cycles) */
     pwm_cycle_cntr++;
 
-
     if(pwm_cycle_cntr >= p_mtr_pattern_ctrl->vel_accel.velocity && p_mtr_pattern_ctrl->ctrl_type == OPEN_LOOP_CONTROL)
     {
         pwm_cycle_cntr = 0;
@@ -98,9 +99,9 @@ void pwm_counter_overflow (void)
 
 
         //get values from memory so block timers can be updated faster (promote synchronicity of timer updates)
-        pin_duty_state pins_u = p_pins_ctrl->u_phase_pins.pins_duty_reg;
-        pin_duty_state pins_v = p_pins_ctrl->v_phase_pins.pins_duty_reg;
-        pin_duty_state pins_w = p_pins_ctrl->w_phase_pins.pins_duty_reg;
+        pins_u = p_pins_ctrl->u_phase_pins.pins_duty_reg;
+        pins_v = p_pins_ctrl->v_phase_pins.pins_duty_reg;
+        pins_w = p_pins_ctrl->w_phase_pins.pins_duty_reg;
 
         /*** Update timer pins output ***/
         //update U timer
@@ -136,12 +137,20 @@ void pwm_counter_overflow (void)
 
 
     }
-    else if (p_mtr_pattern_ctrl == CLOSED_LOOP_CONTROL)
+
+    //update ADC variable for logging, do this every interrupt
+    if(pins_u == 0x02020001)
     {
-        //for closed loop control
-
+        g_motors[1]->p_ctrl->adc1_raw = R_S12ADC0->ADDRn[0];
     }
-
+    else if(pins_v == 0x02020001)
+    {
+        g_motors[1]->p_ctrl->adc1_raw = R_S12ADC0->ADDRn[1];
+    }
+    else if(pins_w == 0x02020001)
+    {
+        g_motors[1]->p_ctrl->adc1_raw = R_S12ADC0->ADDRn[2];
+    }
     /** Clear pending IRQ to make sure it doesn't fire again after exiting */
     R_BSP_IrqStatusClear(irq);
 

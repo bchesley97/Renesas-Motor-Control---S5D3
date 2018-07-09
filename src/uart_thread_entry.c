@@ -25,7 +25,7 @@ void uart_thread_entry(void)
 
     err = p_comms->p_api->write(p_comms->p_ctrl, (uint8_t  const *)"Synergy Sensorless BLDC Control", 31, TX_NO_WAIT);
 
-    mc_uart.channel = '0'; //used to be 1
+    mc_uart.channel = '1'; //used to be 1
     mc_uart.prx = mc_uart.rx_buf;
     mc_uart.rx_count = 0;
     while (1)

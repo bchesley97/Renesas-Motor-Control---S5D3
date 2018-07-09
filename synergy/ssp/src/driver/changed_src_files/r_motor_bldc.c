@@ -161,6 +161,8 @@ const motor_api_t g_motor_bldc =
 extern void (*sf_callback)(void);
 extern bool irq_handler_set;
 
+
+
 //function to change duty cycle of waveform
 void change_pwm_duty(float duty_cycle_percent)
 {
@@ -168,7 +170,6 @@ void change_pwm_duty(float duty_cycle_percent)
     {
         return; //basic parameter checking
     }
-
     uint32_t duty_value_ticks = g_motors[1]->p_ctrl->pwm_period - (uint32_t)(((float)g_motors[1]->p_ctrl->pwm_period * duty_cycle_percent)/100.0f);
 
     motor_ctrl_t * const p_ctrl = g_motors[1]->p_ctrl;
@@ -186,6 +187,15 @@ void change_pwm_duty(float duty_cycle_percent)
     p_ctrl->p_gpt_w->GTCCRC = duty_value_ticks;
     p_ctrl->p_gpt_w->GTDTCR_b.TDE = 1; //this will place new GTDVU value automatically
 
+
+    //after duty cycle is around 10 we flip adc request to counting up, since counting up nowis long enough to wait out transients of motors BEMF
+    if(duty_cycle_percent >= 10)
+    {
+        R_GPTA0->GTADTBRA = R_GPTA0->GTCCRC + 100; //should be around 800 ns after rising pwm time
+        R_GPTA0->GTINTAD_b.ADTRADEN = 0; //disable A/D converter start request on GTADTRA down counting compare match
+        R_GPTA0->GTINTAD_b.ADTRAUEN = 1; //enable A/D converter start request on rising count.
+
+    }
 }
 
 
@@ -857,7 +867,7 @@ static inline void enable_adc_timer()
 
 
      R_S12ADC0->ADCER_b.ADPRC = 0b00; //12 bit accuracy. 10 bit might be used as it is faster to convert
-     R_S12ADC0->ADCER_b.ACE = 1;
+     //R_S12ADC0->ADCER_b.ACE = 1;
      R_S12ADC0->ADSTRGR_b.TRSA = 0b001001; //enables ELC_ADC00 and ELC_ADC10
 
 
@@ -896,7 +906,7 @@ static inline void enable_adc_timer()
      R_S12ADC0->ADPGADCR0 = 0;
 
      //wait 1us
-     R_S12ADC0->ADANSA0 = 0x0007;
+    // R_S12ADC0->ADANSA0 = 0x0007;
 
 
      //link with ELC
@@ -1052,12 +1062,10 @@ ssp_err_t R_Motor_BLDC_Open (motor_ctrl_t * const p_ctrl, motor_cfg_t * const p_
     /*** Complementary mode ***/
     if (p_ctrl->p_cfg->output_mode == PWM_OUT_COMPLEMENTARY) //only initialize and start the trapezoidal commutation timers
     {
-        float dead_time_ns = 400; //400 ns dead time. need this value for when the motor starts running at high RP
+        float dead_time_ns = 200; //400 ns dead time. need this value for when the motor starts running at high RP
         gpt_set_pins_comp(p_ctrl->p_gpt_u, &dead_time_ns); //second argument is in NANOSECONDS, since dealing with small duty cycles
         gpt_set_pins_comp(p_ctrl->p_gpt_v, &dead_time_ns);
         gpt_set_pins_comp(p_ctrl->p_gpt_w, &dead_time_ns);
-
-
 
         change_pwm_duty(1); //change duty cycle to one percent
 
@@ -1085,7 +1093,39 @@ ssp_err_t R_Motor_BLDC_Open (motor_ctrl_t * const p_ctrl, motor_cfg_t * const p_
 
     return SSP_SUCCESS;
 } /* End of function R_Motor_BLDC_TimerOpen */
+void reset_command()
+{
 
+    motor_ctrl_t * const p_ctrl = g_motors[1]->p_ctrl;
+    motor_cfg_t * const p_cfg = g_motors[1]->p_cfg;
+
+    p_mtr_pattern_ctrl->vel_accel.velocity = 1000; //velocity is in terms of PWM counts, more counts the slower. Starting at 500 counts
+    p_mtr_pattern_ctrl->vel_accel.acceleration = 2; //initial rate to accelerate at
+    p_mtr_pattern_ctrl->ctrl_type = OPEN_LOOP_CONTROL; //initially starting, use open loop control till back EMF strong enough to sense with comparator
+    //p_mtr_pattern_ctrl->p_trap_pattern = &trap_pattern[0];
+
+    //reinitialize all variables to their starting values
+//    p_ctrl->p_gpt_u->GTUDDTYC = pin_ctrl_u[0];
+//    p_ctrl->p_gpt_v->GTUDDTYC = pin_ctrl_v[0];
+//    p_ctrl->p_gpt_w->GTUDDTYC = pin_ctrl_w[0];
+
+
+    float dead_time_ns = 200; //400 ns dead time. need this value for when the motor starts running at high RP
+    gpt_set_pins_comp(p_ctrl->p_gpt_u, &dead_time_ns); //second argument is in NANOSECONDS, since dealing with small duty cycles
+    gpt_set_pins_comp(p_ctrl->p_gpt_v, &dead_time_ns);
+    gpt_set_pins_comp(p_ctrl->p_gpt_w, &dead_time_ns);
+
+
+    enable_adc_timer();
+    R_S12ADC0->ADCMPCR_b.CMPAE = 0;
+    R_S12ADC0->ADANSA0 = 0x0000; //turn off adc input
+    R_S12ADC0->ADCMPCR_b.CMPAE = 1;
+    p_mtr_pattern_ctrl->pwm_duty_cycle = 1; //phase zero is starting open loop control
+
+    //turn on timers
+    p_ctrl->p_gpt_v->GTSTR = (uint32_t)((1 << p_cfg->pwm_ch_u) | (1 << p_cfg->pwm_ch_v) | (1 << p_cfg->pwm_ch_w));
+
+}
 
 /*******************************************************************************************************************//**
  * @brief  Setups motor commutation. Implements timer_api_t::setup.

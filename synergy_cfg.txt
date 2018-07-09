@@ -97,8 +97,8 @@ Synergy Configuration
       P101 74 SPI0_MOSI Low None "Peripheral mode" CMOS None "AGT0: AGTEE; BUS_ASYNCH0: D01; GPT_POEG1: GTETRG; GPT5: GTIOCA; ICU0: IRQ01; IIC1: SDA; KINT0: KRM1; SCI0: SDA; SCI0: TXD; SCI1: CTS; SPI0: MOSI" - 
       P102 73 SPI0_RSPCK Low - "Peripheral mode" CMOS None "ADC0: ADTRG; AGT0: AGTO; BUS_ASYNCH0: D02; CAN0: CRX; GPT_OPS0: GTOWLO; GPT2: GTIOCB; KINT0: KRM2; SCI0: SCK; SPI0: RSPCK" - 
       P103 72 SPI0_SSL0 Low - "Peripheral mode" CMOS None "BUS_ASYNCH0: D03; CAN0: CTX; GPT_OPS0: GTOWUP; GPT2: GTIOCA; KINT0: KRM3; SCI0: CTS; SPI0: SSL0" - 
-      P104 71 - - - Disabled - - "BUS_ASYNCH0: D04; GPT_POEG1: GTETRG; GPT1: GTIOCB; ICU0: IRQ01; KINT0: KRM4; QSPI0: QIO0; SCI8: RXD; SCI8: SCL; SPI0: SSL1" - 
-      P105 70 - - - Disabled - - "BUS_ASYNCH0: D05; GPT_POEG0: GTETRG; GPT1: GTIOCA; ICU0: IRQ00; KINT0: KRM5; QSPI0: QIO1; SCI8: SDA; SCI8: TXD; SPI0: SSL2" - 
+      P104 71 SCI8_RXD Low None "Peripheral mode" CMOS None "BUS_ASYNCH0: D04; GPT_POEG1: GTETRG; GPT1: GTIOCB; ICU0: IRQ01; KINT0: KRM4; QSPI0: QIO0; SCI8: RXD; SCI8: SCL; SPI0: SSL1" - 
+      P105 70 SCI8_TXD Low None "Peripheral mode" CMOS None "BUS_ASYNCH0: D05; GPT_POEG0: GTETRG; GPT1: GTIOCA; ICU0: IRQ00; KINT0: KRM5; QSPI0: QIO1; SCI8: SDA; SCI8: TXD; SPI0: SSL2" - 
       P106 69 GPIO Low - "Output mode (Initial Low)" CMOS - "AGT0: AGTOB; BUS_ASYNCH0: D06; GPT8: GTIOCB; KINT0: KRM6; QSPI0: QIO2; SCI8: SCK; SPI0: SSL3" RTS 
       P107 68 GPIO Low - "Output mode (Initial Low)" CMOS - "AGT0: AGTOA; BUS_ASYNCH0: D07; GPT8: GTIOCA; KINT0: KRM7; QSPI0: QIO3; SCI8: CTS" CTS 
       P108 51 DEBUG0_TMS Low - "Peripheral mode" CMOS None "DEBUG0: SWDIO; DEBUG0: TMS; GPT_OPS0: GTOULO; GPT0: GTIOCB; SCI9: CTS; SPI1: SSL0" - 
@@ -379,7 +379,7 @@ Synergy Configuration
       
       Instance "g_uart0 UART Driver on r_sci_uart"
         Name: g_uart0
-        Channel: 0
+        Channel: 8
         Baud Rate: 9600
         Data Bits: 8bits
         Parity: None
@@ -398,7 +398,7 @@ Synergy Configuration
         Transmit End Interrupt Priority: Priority 12
         Error Interrupt Priority: Disabled
         
-        Instance "g_transfer0 Transfer Driver on r_dtc Event SCI0 TXI"
+        Instance "g_transfer0 Transfer Driver on r_dtc Event SCI8 TXI"
           Name: g_transfer0
           Mode: Normal
           Transfer Size: 1 Byte
@@ -410,7 +410,7 @@ Synergy Configuration
           Source Pointer: NULL
           Number of Transfers: 0
           Number of Blocks (Valid only in Block Mode): 0
-          Activation Source (Must enable IRQ): Event SCI0 TXI
+          Activation Source (Must enable IRQ): Event SCI8 TXI
           Auto Enable: False
           Callback (Only valid with Software start): NULL
           ELC Software Event Interrupt Priority: Disabled

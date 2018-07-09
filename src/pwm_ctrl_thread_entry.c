@@ -11,30 +11,27 @@ extern motor_instance_t const *g_motors[16];
 /* PWM Control Thread entry function */
 void pwm_ctrl_thread_entry(void)
 {
-
     tx_thread_sleep (5); //update every 10 ms, less for closed loop control (faster speeds)
 
     uint32_t acceleration_counter = 0;
-    float pwm_duty_cycle = 1; //in percent, this is the starting value
 
+    p_mtr_pattern_ctrl->pwm_duty_cycle = 1;
     while (1)
     {
 
         //check which type of control to perform
         if (p_mtr_pattern_ctrl->ctrl_type == OPEN_LOOP_CONTROL)
         {
-
             if (p_mtr_pattern_ctrl->vel_accel.velocity > CONTROL_SWITCH_VELOCITY)
             {
                 p_mtr_pattern_ctrl->vel_accel.velocity -= p_mtr_pattern_ctrl->vel_accel.acceleration; //add acceleration to the velocity (subtracting because these are in terms of pwm cycles)
 
                 acceleration_counter++;
-                if(acceleration_counter > 10)
+                if(acceleration_counter > 4)
                 {
                     acceleration_counter = 0;
-                    change_pwm_duty(pwm_duty_cycle);
-                    pwm_duty_cycle+= 0.1;
-
+                    change_pwm_duty( p_mtr_pattern_ctrl->pwm_duty_cycle);
+                    p_mtr_pattern_ctrl->pwm_duty_cycle += 0.05;
                 }
 
 

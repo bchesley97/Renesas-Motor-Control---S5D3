@@ -40,6 +40,7 @@
 #include "motion_thread.h"
 
 #include "m_common.h"
+extern motor_instance_t const *g_motors[16];
 
 uint16_t m_state(sf_motion_instance_t *cm, bool arg_set, int32_t *p_arg_value)
 {
@@ -704,6 +705,7 @@ uint16_t m_go(sf_motion_instance_t *cm, bool arg_set, int32_t *p_arg_value)
         cm->p_ctrl->motion_req.position = *p_arg_value;
     }
     return (uint16_t)(cm->p_api->start(cm->p_ctrl));
+
 }
 
 uint16_t m_forward(sf_motion_instance_t *cm, bool arg_set, int32_t *p_arg_value)
@@ -730,15 +732,26 @@ uint16_t m_reverse(sf_motion_instance_t *cm, bool arg_set, int32_t *p_arg_value)
 
 uint16_t m_powerOn(sf_motion_instance_t *cm, bool arg_set, int32_t *p_arg_value)
 {
-    SSP_PARAMETER_NOT_USED(arg_set);
-    SSP_PARAMETER_NOT_USED(p_arg_value);
-    return (uint16_t)(cm->p_api->power(cm->p_ctrl, true));
+//    SSP_PARAMETER_NOT_USED(arg_set);
+//    SSP_PARAMETER_NOT_USED(p_arg_value);
+//    return (uint16_t)(cm->p_api->power(cm->p_ctrl, true));
+
+    reset_command(); //call reset_command which is in r_motor_bldc.c This function reinitializes all variables to their starting value
+    return true;
 }
 
 uint16_t m_powerOff(sf_motion_instance_t *cm, bool arg_set, int32_t *p_arg_value)
 {
     SSP_PARAMETER_NOT_USED(arg_set);
     SSP_PARAMETER_NOT_USED(p_arg_value);
+
+    //turn off timer counters
+    g_motors[1]->p_ctrl->p_gpt_u->GTPSR_b.CSTOP = 1;
+    g_motors[1]->p_ctrl->p_gpt_v->GTPSR_b.CSTOP = 1;
+    g_motors[1]->p_ctrl->p_gpt_w->GTPSR_b.CSTOP = 1;
+
+    g_motors[1]->p_ctrl->p_gpt_v->GTSTP = 0x00000007;
+
     return (uint16_t)(cm->p_api->power(cm->p_ctrl, false));
 }
 
