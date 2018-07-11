@@ -746,11 +746,11 @@ uint16_t m_powerOff(sf_motion_instance_t *cm, bool arg_set, int32_t *p_arg_value
     SSP_PARAMETER_NOT_USED(p_arg_value);
 
     //turn off timer counters
-    g_motors[1]->p_ctrl->p_gpt_u->GTPSR_b.CSTOP = 1;
-    g_motors[1]->p_ctrl->p_gpt_v->GTPSR_b.CSTOP = 1;
-    g_motors[1]->p_ctrl->p_gpt_w->GTPSR_b.CSTOP = 1;
+    g_motors[0]->p_ctrl->p_gpt_u->GTPSR_b.CSTOP = 1;
+    g_motors[0]->p_ctrl->p_gpt_v->GTPSR_b.CSTOP = 1;
+    g_motors[0]->p_ctrl->p_gpt_w->GTPSR_b.CSTOP = 1;
 
-    g_motors[1]->p_ctrl->p_gpt_v->GTSTP = 0x00000007;
+    g_motors[0]->p_ctrl->p_gpt_v->GTSTP = 0x00000007;
 
     return (uint16_t)(cm->p_api->power(cm->p_ctrl, false));
 }
@@ -804,7 +804,7 @@ uint16_t m_inputs(sf_motion_instance_t *cm, bool arg_set, int32_t *p_arg_value)
     {
         int32_t tmp;
         tmp  = (int32_t)(g_sf_motion1.p_ctrl->hall_state & 0x000f);
-        tmp |= (int32_t)(g_sf_motion2.p_ctrl->hall_state & 0x000f) << 4;
+        //tmp |= (int32_t)(g_sf_motion2.p_ctrl->hall_state & 0x000f) << 4;
 
         *p_arg_value = (int32_t)(uint32_t)(tmp);// + (fault ? 0x0000 : 0) + tmp;
     }

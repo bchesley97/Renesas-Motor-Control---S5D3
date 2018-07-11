@@ -30,6 +30,14 @@
 #include "bsp_api.h"
 #include "common_data.h"
 
+
+
+
+
+
+
+
+
 volatile uint32_t pwm_cycle_cntr = 0;
 void (*sf_callback)(void) = NULL;
 bool irq_handler_set = false;
@@ -50,10 +58,15 @@ ioport_level_t level = IOPORT_LEVEL_LOW;
 
 /* Interrupt handler for high speed motor control loops */
 void pwm_counter_overflow (void);
+/*interrupt handler to switch commutation after detecting bemf */
+void timer_change_commut_isr(void);
+volatile pin_duty_state pins_u;
+volatile pin_duty_state pins_v;
+volatile pin_duty_state pins_w;
 
-    pin_duty_state pins_u;
-     pin_duty_state pins_v;
-     pin_duty_state pins_w;
+volatile bool switch_ol_to_cl = 0;
+
+
 
 void pwm_counter_overflow (void)
 {
@@ -66,27 +79,27 @@ void pwm_counter_overflow (void)
     ssp_vector_info_t * p_vector_info = NULL;
     IRQn_Type irq = R_SSP_CurrentIrqGet();
     R_SSP_VectorInfoGet(irq, &p_vector_info);
-    motor_instance_t *trap_motor = g_motors[1]; //hardcode the motor that has a trapezoidal commutation scheme
+    motor_instance_t *trap_motor = g_motors[0]; //hardcode the motor that has a trapezoidal commutation scheme
 
 
-//    if (sf_callback != NULL)
-//    {
-//        /* If there is a motor owner - call its callback */
-//        sf_callback();
-//    }
-//    else
-//    {
-//        /* If the motor modules are stand alone - call their control function */
-//        for (int32_t i = 0; i < g_motor_count; i++)
-//        {
-//            if (g_motors[i]->p_api != NULL)
-//                g_motors[i]->p_api->control(g_motors[i]->p_ctrl);
-//        }
-//    }
+    if (sf_callback != NULL)
+    {
+        /* If there is a motor owner - call its callback */
+        sf_callback();
+    }
+    else
+    {
+        /* If the motor modules are stand alone - call their control function */
+        for (int32_t i = 0; i < g_motor_count; i++)
+        {
+            if (g_motors[i]->p_api != NULL)
+                g_motors[i]->p_api->control(g_motors[i]->p_ctrl);
+        }
+    }
     /* Keep track of the number of PWM interrupts (control cycles) */
     pwm_cycle_cntr++;
 
-    if(pwm_cycle_cntr >= p_mtr_pattern_ctrl->vel_accel.velocity && p_mtr_pattern_ctrl->ctrl_type == OPEN_LOOP_CONTROL)
+    if(pwm_cycle_cntr >= p_mtr_pattern_ctrl->vel_accel.velocity)
     {
         pwm_cycle_cntr = 0;
 
@@ -134,23 +147,41 @@ void pwm_counter_overflow (void)
             R_S12ADC0->ADANSA0 = 0x0004;
             R_S12ADC0->ADCMPCR_b.CMPAE = 1;
         }
-
-
     }
-
-    //update ADC variable for logging, do this every interrupt
-    if(pins_u == 0x02020001)
+    else if (p_mtr_pattern_ctrl->ctrl_type == CLOSED_LOOP_CONTROL)
     {
-        g_motors[1]->p_ctrl->adc1_raw = R_S12ADC0->ADDRn[0];
+//        switch_ol_to_cl = 1;
+//
+//        //enable the adc interrupt to detect zero cross
+//        //enable adc interrupt
+//        ssp_feature_t ssp_feature = {{ (ssp_ip_t) 0 } };
+//        ssp_feature.channel = 0;
+//        ssp_feature.unit = 0U;
+//        ssp_feature.id = SSP_IP_ADC;
+//
+//        fmi_event_info_t event_info =
+//        { (IRQn_Type) 0U };
+//        g_fmi_on_fmi.eventInfoGet (&ssp_feature, SSP_SIGNAL_ADC_WINDOW_A, &event_info);
+//        NVIC_SetPriority (event_info.irq, 2);
+//
+//        R_BSP_IrqStatusClear (event_info.irq);
+//        NVIC_ClearPendingIRQ (event_info.irq);
+//        NVIC_EnableIRQ (event_info.irq);
+//
+//
+//        //enable gpt32 delay interrupt
+//        ssp_feature.channel = 4;
+//        ssp_feature.unit = 0U;
+//        ssp_feature.id = SSP_IP_GPT;
+//
+//        g_fmi_on_fmi.eventInfoGet (&ssp_feature, SSP_SIGNAL_GPT_COUNTER_OVERFLOW, &event_info);
+//        NVIC_SetPriority (event_info.irq, 1);
+//
+//        R_BSP_IrqStatusClear (event_info.irq);
+//        NVIC_ClearPendingIRQ (event_info.irq);
+//        NVIC_EnableIRQ (event_info.irq);
     }
-    else if(pins_v == 0x02020001)
-    {
-        g_motors[1]->p_ctrl->adc1_raw = R_S12ADC0->ADDRn[1];
-    }
-    else if(pins_w == 0x02020001)
-    {
-        g_motors[1]->p_ctrl->adc1_raw = R_S12ADC0->ADDRn[2];
-    }
+
     /** Clear pending IRQ to make sure it doesn't fire again after exiting */
     R_BSP_IrqStatusClear(irq);
 
@@ -168,20 +199,117 @@ void adc_comp_isr()
     ssp_vector_info_t * p_vector_info = NULL;
     IRQn_Type irq = R_SSP_CurrentIrqGet();
     R_SSP_VectorInfoGet(irq, &p_vector_info);
+//
+//    if(switch_ol_to_cl == 1)
+//    {
+//        switch_ol_to_cl = 0;
+//        //disable gpt interrupt
+//        ssp_feature_t ssp_feature = {{ (ssp_ip_t) 0 } };
+//        ssp_feature.channel = 0;
+//        ssp_feature.unit = 0U;
+//        ssp_feature.id = SSP_IP_GPT;
+//        fmi_event_info_t event_info = { (IRQn_Type) 0U };
+//        g_fmi_on_fmi.eventInfoGet (&ssp_feature, SSP_SIGNAL_GPT_COUNTER_OVERFLOW, &event_info);
+//        NVIC_SetPriority (event_info.irq, 1);
+//
+//        R_BSP_IrqStatusClear (event_info.irq);
+//        NVIC_ClearPendingIRQ (event_info.irq);
+//        NVIC_DisableIRQ (event_info.irq);
+//
+////    }
+//    //enable timer for commutation delay after zero cross detection
+//    R_GPTA4->GTCR_b.CST = 1;
+//
+//    if(level == IOPORT_LEVEL_LOW)
+//    {
+//        level = IOPORT_LEVEL_HIGH;
+//    }
+//    else
+//    {
+//        level = IOPORT_LEVEL_LOW;
+//    }
+//    g_ioport.p_api->pinWrite(IOPORT_PORT_05_PIN_00, level); //toggle pin at interrupt for change commutation
 
-    if(level == IOPORT_LEVEL_LOW)
+    //update ADC variable for logging, do this every interrupt
+    if(pins_u == 0x02020001)
     {
-        level = IOPORT_LEVEL_HIGH;
+        g_motors[0]->p_ctrl->adc1_raw = (int16_t)R_S12ADC0->ADDRn[0];
     }
-    else
+    else if(pins_v == 0x02020001)
     {
-        level = IOPORT_LEVEL_LOW;
+        g_motors[0]->p_ctrl->adc1_raw = (int16_t)R_S12ADC0->ADDRn[1];
     }
-    g_ioport.p_api->pinWrite(IOPORT_PORT_05_PIN_00, level); //toggle pin at interrupt for change commutation
-
-
+    else if(pins_w == 0x02020001)
+    {
+        g_motors[0]->p_ctrl->adc1_raw = (int16_t)R_S12ADC0->ADDRn[2];
+    }
     /** Clear pending IRQ to make sure it doesn't fire again after exiting */
     R_BSP_IrqStatusClear(irq);
     SF_CONTEXT_RESTORE
 }
+
+
+void timer_change_commut_isr()
+{
+    SF_CONTEXT_SAVE
+    ssp_vector_info_t * p_vector_info = NULL;
+    IRQn_Type irq = R_SSP_CurrentIrqGet();
+    R_SSP_VectorInfoGet(irq, &p_vector_info);
+
+
+    motor_instance_t *trap_motor = g_motors[0]; //hardcode the motor that has a trapezoidal commutation scheme
+
+    //update pointer holding data about pin levels for specific trapezoidal commutation
+    p_pins_ctrl++;
+    if(p_pins_ctrl > &pins_ctrl[5])
+    {
+        p_pins_ctrl = &pins_ctrl[0]; //reset pointer to beginning of pattern array
+    }
+
+
+    //get values from memory so block timers can be updated faster (promote synchronicity of timer updates)
+    pins_u = p_pins_ctrl->u_phase_pins.pins_duty_reg;
+    pins_v = p_pins_ctrl->v_phase_pins.pins_duty_reg;
+    pins_w = p_pins_ctrl->w_phase_pins.pins_duty_reg;
+
+    /*** Update timer pins output ***/
+    //update U timer
+    trap_motor->p_ctrl->p_gpt_u->GTUDDTYC = pins_u;   //changing the OADTY/OBDTY bits allows for synchronous changing of the timer's pin outputs at a timer underflow
+
+    //update V timer
+    trap_motor->p_ctrl->p_gpt_v->GTUDDTYC = pins_v;
+
+    //update W timer
+    trap_motor->p_ctrl->p_gpt_w->GTUDDTYC = pins_w;
+
+    R_S12ADC0->ADANSA0 = 0;
+    if(pins_u == 0x02020001)
+    {
+        R_S12ADC0->ADCMPCR_b.CMPAE = 0;
+        R_S12ADC0->ADANSA0 = 0x0001;
+        R_S12ADC0->ADCMPCR_b.CMPAE = 1;
+    }
+
+    else if(pins_v == 0x02020001)
+    {
+        R_S12ADC0->ADCMPCR_b.CMPAE = 0;
+        R_S12ADC0->ADANSA0 = 0x0002;
+        R_S12ADC0->ADCMPCR_b.CMPAE = 1;
+    }
+
+    else if(pins_w == 0x02020001)
+    {
+        R_S12ADC0->ADCMPCR_b.CMPAE = 0;
+        R_S12ADC0->ADANSA0 = 0x0004;
+        R_S12ADC0->ADCMPCR_b.CMPAE = 1;
+    }
+
+    R_BSP_IrqStatusClear(irq);
+    SF_CONTEXT_RESTORE
+}
+
+
+
+
+
 

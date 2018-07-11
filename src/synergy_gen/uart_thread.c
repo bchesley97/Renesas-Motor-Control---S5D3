@@ -8,7 +8,7 @@ static uint8_t uart_thread_stack[1024] BSP_PLACE_IN_SECTION_V2(".stack.uart_thre
 void tx_startup_err_callback(void *p_instance, void *p_data);
 void tx_startup_common_init(void);
 #if (BSP_IRQ_DISABLED) != BSP_IRQ_DISABLED
-#if !defined(SSP_SUPPRESS_ISR_g_transfer0) && !defined(SSP_SUPPRESS_ISR_DTCELC_EVENT_SCI8_TXI)
+#if !defined(SSP_SUPPRESS_ISR_g_transfer1) && !defined(SSP_SUPPRESS_ISR_DTCELC_EVENT_SCI8_TXI)
 #define DTC_ACTIVATION_SRC_ELC_EVENT_SCI8_TXI
 #if defined(DTC_ACTIVATION_SRC_ELC_EVENT_ELC_SOFTWARE_EVENT_0) && !defined(DTC_VECTOR_DEFINED_SOFTWARE_EVENT_0)
 SSP_VECTOR_DEFINE(elc_software_event_isr, ELC, SOFTWARE_EVENT_0);
@@ -21,8 +21,8 @@ SSP_VECTOR_DEFINE(elc_software_event_isr, ELC, SOFTWARE_EVENT_1);
 #endif
 #endif
 
-dtc_instance_ctrl_t g_transfer0_ctrl;
-transfer_info_t g_transfer0_info =
+dtc_instance_ctrl_t g_transfer1_ctrl;
+transfer_info_t g_transfer1_info =
 { .dest_addr_mode = TRANSFER_ADDR_MODE_FIXED,
   .repeat_area = TRANSFER_REPEAT_AREA_SOURCE,
   .irq = TRANSFER_IRQ_END,
@@ -34,54 +34,54 @@ transfer_info_t g_transfer0_info =
   .p_src = (void const *) NULL,
   .num_blocks = 0,
   .length = 0, };
-const transfer_cfg_t g_transfer0_cfg =
-{ .p_info = &g_transfer0_info,
+const transfer_cfg_t g_transfer1_cfg =
+{ .p_info = &g_transfer1_info,
   .activation_source = ELC_EVENT_SCI8_TXI,
   .auto_enable = false,
   .p_callback = NULL,
-  .p_context = &g_transfer0,
+  .p_context = &g_transfer1,
   .irq_ipl = (BSP_IRQ_DISABLED) };
 /* Instance structure to use this module. */
-const transfer_instance_t g_transfer0 =
-{ .p_ctrl = &g_transfer0_ctrl, .p_cfg = &g_transfer0_cfg, .p_api = &g_transfer_on_dtc };
-#if (12) != BSP_IRQ_DISABLED
-#if !defined(SSP_SUPPRESS_ISR_g_uart0) && !defined(SSP_SUPPRESS_ISR_SCI8)
+const transfer_instance_t g_transfer1 =
+{ .p_ctrl = &g_transfer1_ctrl, .p_cfg = &g_transfer1_cfg, .p_api = &g_transfer_on_dtc };
+#if (0) != BSP_IRQ_DISABLED
+#if !defined(SSP_SUPPRESS_ISR_g_uart1) && !defined(SSP_SUPPRESS_ISR_SCI8)
 SSP_VECTOR_DEFINE_CHAN(sci_uart_rxi_isr, SCI, RXI, 8);
 #endif
 #endif
-#if (12) != BSP_IRQ_DISABLED
-#if !defined(SSP_SUPPRESS_ISR_g_uart0) && !defined(SSP_SUPPRESS_ISR_SCI8)
+#if (0) != BSP_IRQ_DISABLED
+#if !defined(SSP_SUPPRESS_ISR_g_uart1) && !defined(SSP_SUPPRESS_ISR_SCI8)
 SSP_VECTOR_DEFINE_CHAN(sci_uart_txi_isr, SCI, TXI, 8);
 #endif
 #endif
-#if (12) != BSP_IRQ_DISABLED
-#if !defined(SSP_SUPPRESS_ISR_g_uart0) && !defined(SSP_SUPPRESS_ISR_SCI8)
+#if (0) != BSP_IRQ_DISABLED
+#if !defined(SSP_SUPPRESS_ISR_g_uart1) && !defined(SSP_SUPPRESS_ISR_SCI8)
 SSP_VECTOR_DEFINE_CHAN(sci_uart_tei_isr, SCI, TEI, 8);
 #endif
 #endif
 #if (BSP_IRQ_DISABLED) != BSP_IRQ_DISABLED
-#if !defined(SSP_SUPPRESS_ISR_g_uart0) && !defined(SSP_SUPPRESS_ISR_SCI8)
+#if !defined(SSP_SUPPRESS_ISR_g_uart1) && !defined(SSP_SUPPRESS_ISR_SCI8)
 SSP_VECTOR_DEFINE_CHAN(sci_uart_eri_isr, SCI, ERI, 8);
 #endif
 #endif
-sci_uart_instance_ctrl_t g_uart0_ctrl;
+sci_uart_instance_ctrl_t g_uart1_ctrl;
 
 /** UART extended configuration for UARTonSCI HAL driver */
-const uart_on_sci_cfg_t g_uart0_cfg_extend =
+const uart_on_sci_cfg_t g_uart1_cfg_extend =
 { .clk_src = SCI_CLK_SRC_INT, .baudclk_out = false, .rx_edge_start = true, .noisecancel_en = false, .p_extpin_ctrl =
           NULL,
   .bitrate_modulation = true, .rx_fifo_trigger = SCI_UART_RX_FIFO_TRIGGER_MAX };
 
 /** UART interface configuration */
-const uart_cfg_t g_uart0_cfg =
-{ .channel = 8, .baud_rate = 9600, .data_bits = UART_DATA_BITS_8, .parity = UART_PARITY_OFF, .stop_bits =
+const uart_cfg_t g_uart1_cfg =
+{ .channel = 8, .baud_rate = 115200, .data_bits = UART_DATA_BITS_8, .parity = UART_PARITY_OFF, .stop_bits =
           UART_STOP_BITS_1,
-  .ctsrts_en = false, .p_callback = NULL, .p_context = &g_uart0, .p_extend = &g_uart0_cfg_extend,
+  .ctsrts_en = false, .p_callback = NULL, .p_context = &g_uart1, .p_extend = &g_uart1_cfg_extend,
 #define SYNERGY_NOT_DEFINED (1)                        
-#if (SYNERGY_NOT_DEFINED == g_transfer0)
+#if (SYNERGY_NOT_DEFINED == g_transfer1)
   .p_transfer_tx = NULL,
 #else
-  .p_transfer_tx = &g_transfer0,
+  .p_transfer_tx = &g_transfer1,
 #endif            
 #if (SYNERGY_NOT_DEFINED == SYNERGY_NOT_DEFINED)
   .p_transfer_rx = NULL,
@@ -89,12 +89,12 @@ const uart_cfg_t g_uart0_cfg =
   .p_transfer_rx = &SYNERGY_NOT_DEFINED,
 #endif   
 #undef SYNERGY_NOT_DEFINED            
-  .rxi_ipl = (12),
-  .txi_ipl = (12), .tei_ipl = (12), .eri_ipl = (BSP_IRQ_DISABLED), };
+  .rxi_ipl = (0),
+  .txi_ipl = (0), .tei_ipl = (0), .eri_ipl = (BSP_IRQ_DISABLED), };
 
 /* Instance structure to use this module. */
-const uart_instance_t g_uart0 =
-{ .p_ctrl = &g_uart0_ctrl, .p_cfg = &g_uart0_cfg, .p_api = &g_uart_on_sci };
+const uart_instance_t g_uart1 =
+{ .p_ctrl = &g_uart1_ctrl, .p_cfg = &g_uart1_cfg, .p_api = &g_uart_on_sci };
 #if defined(__ICCARM__)
 #define g_sf_uart_err_callback_WEAK_ATTRIBUTE
 #pragma weak g_sf_uart_err_callback  = g_sf_uart_err_callback_internal
@@ -105,7 +105,7 @@ void g_sf_uart_err_callback(void *p_instance, void *p_data)
 g_sf_uart_err_callback_WEAK_ATTRIBUTE;
 static sf_uart_comms_instance_ctrl_t g_sf_uart_ctrl;
 static const sf_uart_comms_cfg_t g_sf_uart_cfg_extend =
-{ .p_lower_lvl_uart = &g_uart0, };
+{ .p_lower_lvl_uart = &g_uart1, };
 static const sf_comms_cfg_t g_sf_uart_cfg =
 { .p_extend = &g_sf_uart_cfg_extend, };
 /* Instance structure to use this module. */
@@ -131,9 +131,9 @@ void g_sf_uart_err_callback_internal(void *p_instance, void *p_data)
 /*******************************************************************************************************************//**
  * @brief     Initialization function that the user can choose to have called automatically during thread entry.
  *            The user can call this function at a later time if desired using the prototype below.
- *            - void sf_comms_init0(void)
+ *            - void sf_comms_init1(void)
  **********************************************************************************************************************/
-void sf_comms_init0(void)
+void sf_comms_init1(void)
 {
     ssp_err_t ssp_err_g_sf_uart;
     ssp_err_g_sf_uart = g_sf_uart.p_api->open (g_sf_uart.p_ctrl, g_sf_uart.p_cfg);
@@ -155,7 +155,7 @@ void uart_thread_create(void)
 
     UINT err;
     err = tx_thread_create (&uart_thread, (CHAR *) "Uart Thread", uart_thread_func, (ULONG) NULL, &uart_thread_stack,
-                            1024, 7, 7, 1, TX_AUTO_START);
+                            1024, 6, 6, 1, TX_AUTO_START);
     if (TX_SUCCESS != err)
     {
         tx_startup_err_callback (&uart_thread, 0);
@@ -173,7 +173,7 @@ static void uart_thread_func(ULONG thread_input)
     /* Initialize each module instance. */
     /** Call initialization function if user has selected to do so. */
 #if (1)
-    sf_comms_init0 ();
+    sf_comms_init1 ();
 #endif
 
     /* Enter user code for this thread. */

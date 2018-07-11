@@ -249,70 +249,15 @@
       <property id="module.driver.motor.kp_d" value="100"/>
       <property id="module.driver.motor.ki_d" value="100"/>
     </module>
-    <module id="module.framework.sf_motion_on_sf_motion.1287179805">
-      <property id="module.framework.sf_motion.name" value="g_sf_motion2"/>
-      <property id="module.framework.sf_motion.profile_mode" value="module.framework.sf_motion.profile_mode.trap"/>
-      <property id="module.framework.sf_motion.phasing_mode" value="module.framework.sf_motion.phasing_mode.forced"/>
-      <property id="module.framework.sf_motion.phasing_time" value="500"/>
-      <property id="module.framework.sf_motion.phasing_power" value="3000"/>
-      <property id="module.framework.sf_motion.auto_stop_mode" value="module.framework.sf_motion.auto_stop_mode.smooth"/>
-      <property id="module.framework.sf_motion.pid_params" value="module.framework.sf_motion.pid_params.default"/>
-      <property id="module.framework.sf_motion.kp" value="20"/>
-      <property id="module.framework.sf_motion.ki" value="20"/>
-      <property id="module.framework.sf_motion.kd" value="500"/>
-      <property id="module.framework.sf_motion.il" value="300"/>
-      <property id="module.framework.sf_motion.ds" value="100"/>
-      <property id="module.framework.sf_motion.pos_err_limit_ec" value="1000"/>
-      <property id="module.framework.sf_motion.pos_err_time_ms" value="100"/>
-      <property id="module.framework.sf_motion.pin_ae" value="IOPORT_PORT_03_PIN_05"/>
-      <property id="module.framework.sf_motion.pin_fault" value="IOPORT_PORT_06_PIN_06"/>
-      <property id="module.framework.sf_motion.pin_hall_u" value="0"/>
-      <property id="module.framework.sf_motion.pin_hall_v" value="0"/>
-      <property id="module.framework.sf_motion.pin_hall_w" value="0"/>
-      <property id="module.framework.sf_motion.brake" value="0"/>
-      <property id="module.framework.sf_motion.p_callback" value="NULL"/>
-    </module>
-    <module id="module.driver.encoder_gpt.1127398189">
-      <property id="module.driver.encoder.name" value="g_r_encoder_gpt2"/>
-      <property id="module.driver.encoder.channel" value="8"/>
-      <property id="module.driver.encoder.ec_per_rev" value="4000"/>
-      <property id="module.driver.encoder.reversed" value="module.driver.driver.encoder.reversed.no"/>
-      <property id="module.driver.encoder.trigger" value="1"/>
-    </module>
-    <module id="module.driver.motor_bldc.1247565820">
-      <property id="module.driver.motor.name" value="g_r_motor_bldc2"/>
-      <property id="module.driver.motor.params" value="module.driver.motor.params.default"/>
-      <property id="module.driver.motor.pole_pairs" value="4"/>
-      <property id="module.driver.motor.inductance" value="1200"/>
-      <property id="module.driver.motor.bemf_coeff" value="15"/>
-      <property id="module.driver.motor.bus_voltage" value="24"/>
-      <property id="module.driver.motor.commutation_mode" value="module.driver.motor.commutation_mode.sin"/>
-      <property id="module.driver.motor.control_mode" value="module.driver.motor.control_mode.voltage"/>
-      <property id="module.driver.motor.output_mode" value="module.driver.motor.output_mode.independent_a"/>
-      <property id="module.driver.motor.pwm_ch_u" value="0"/>
-      <property id="module.driver.motor.pwm_ch_v" value="1"/>
-      <property id="module.driver.motor.pwm_ch_w" value="2"/>
-      <property id="module.driver.motor.pwm_freq_KHz" value="60"/>
-      <property id="module.driver.motor.dead_time_us" value="0"/>
-      <property id="module.driver.motor.adc_ch_u" value="0"/>
-      <property id="module.driver.motor.adc_ch_v" value="1"/>
-      <property id="module.driver.motor.adc_range_mA" value="15000"/>
-      <property id="module.driver.motor.crnt_limit_mA" value="6000"/>
-      <property id="module.driver.motor.crnt_limit_time_ms" value="100"/>
-      <property id="module.driver.motor.kp_q" value="100"/>
-      <property id="module.driver.motor.ki_q" value="100"/>
-      <property id="module.driver.motor.kp_d" value="100"/>
-      <property id="module.driver.motor.ki_d" value="100"/>
-    </module>
-    <module id="module.framework.sf_comms_on_sf_uart_comms.195843152">
+    <module id="module.framework.sf_comms_on_sf_uart_comms.439444512">
       <property id="module.framework.sf_comms.name" value="g_sf_uart"/>
-      <property id="module.framework.sf_comms.init_function" value="sf_comms_init0"/>
+      <property id="module.framework.sf_comms.init_function" value="sf_comms_init1"/>
       <property id="module.framework.sf_comms.init" value="module.framework.sf_comms.init.enable"/>
     </module>
-    <module id="module.driver.uart_on_sci_uart.1150462672">
-      <property id="module.driver.uart.name" value="g_uart0"/>
+    <module id="module.driver.uart_on_sci_uart.1616968626">
+      <property id="module.driver.uart.name" value="g_uart1"/>
       <property id="module.driver.uart.channel" value="8"/>
-      <property id="module.driver.uart.baud_rate" value="9600"/>
+      <property id="module.driver.uart.baud_rate" value="115200"/>
       <property id="module.driver.uart.data_bits" value="module.driver.uart.data_bits.data_bits_8"/>
       <property id="module.driver.uart.parity" value="module.driver.uart.parity.parity_off"/>
       <property id="module.driver.uart.stop_bits" value="module.driver.uart.stop_bits.stop_bits_1"/>
@@ -325,13 +270,13 @@
       <property id="module.driver.uart.noisecancel_en" value="module.driver.uart.noisecancel_en.false"/>
       <property id="module.driver.uart.bitrate_modulation" value="module.driver.uart.bitrate_modulation.true"/>
       <property id="module.driver.uart.rx_fifo_trigger" value="module.driver.uart.rx_fifo_trigger.max"/>
-      <property id="module.driver.uart.rxi_ipl" value="board.icu.common.irq.priority12"/>
-      <property id="module.driver.uart.txi_ipl" value="board.icu.common.irq.priority12"/>
-      <property id="module.driver.uart.tei_ipl" value="board.icu.common.irq.priority12"/>
+      <property id="module.driver.uart.rxi_ipl" value="board.icu.common.irq.priority0"/>
+      <property id="module.driver.uart.txi_ipl" value="board.icu.common.irq.priority0"/>
+      <property id="module.driver.uart.tei_ipl" value="board.icu.common.irq.priority0"/>
       <property id="module.driver.uart.eri_ipl" value="board.icu.common.irq.disabled"/>
     </module>
-    <module id="module.driver.transfer_on_dtc.1726412253">
-      <property id="module.driver.transfer.name" value="g_transfer0"/>
+    <module id="module.driver.transfer_on_dtc.577775218">
+      <property id="module.driver.transfer.name" value="g_transfer1"/>
       <property id="module.driver.transfer.mode" value="module.driver.transfer.mode.mode_normal"/>
       <property id="module.driver.transfer.size" value="module.driver.transfer.size.size_2_byte"/>
       <property id="module.driver.transfer.dest_addr_mode" value="module.driver.transfer.dest_addr_mode.addr_mode_fixed"/>
@@ -364,16 +309,12 @@
         <stack module="module.driver.motor_bldc.320000923" requires="module.framework.sf_motion.requires.motor"/>
         <stack module="module.driver.encoder_gpt.1626155811" requires="module.framework.sf_motion.requires.encoder"/>
       </stack>
-      <stack module="module.framework.sf_motion_on_sf_motion.1287179805">
-        <stack module="module.driver.motor_bldc.1247565820" requires="module.framework.sf_motion.requires.motor"/>
-        <stack module="module.driver.encoder_gpt.1127398189" requires="module.framework.sf_motion.requires.encoder"/>
-      </stack>
     </context>
     <context id="rtos.threadx.thread.1582340959">
       <property id="_symbol" value="pwm_ctrl_thread"/>
       <property id="rtos.threadx.thread.name" value="PWM Thread"/>
       <property id="rtos.threadx.thread.stack" value="1024"/>
-      <property id="rtos.threadx.thread.priority" value="4"/>
+      <property id="rtos.threadx.thread.priority" value="7"/>
       <property id="rtos.threadx.thread.autostart" value="rtos.threadx.thread.autostart.enabled"/>
       <property id="rtos.threadx.thread.timeslice" value="1"/>
     </context>
@@ -381,12 +322,12 @@
       <property id="_symbol" value="uart_thread"/>
       <property id="rtos.threadx.thread.name" value="Uart Thread"/>
       <property id="rtos.threadx.thread.stack" value="1024"/>
-      <property id="rtos.threadx.thread.priority" value="7"/>
+      <property id="rtos.threadx.thread.priority" value="6"/>
       <property id="rtos.threadx.thread.autostart" value="rtos.threadx.thread.autostart.enabled"/>
       <property id="rtos.threadx.thread.timeslice" value="1"/>
-      <stack module="module.framework.sf_comms_on_sf_uart_comms.195843152">
-        <stack module="module.driver.uart_on_sci_uart.1150462672" requires="module.framework.sf_comms_on_sf_uart_comms.requires.uart">
-          <stack module="module.driver.transfer_on_dtc.1726412253" requires="module.driver.uart_on_sci_uart.requires.transfer_tx"/>
+      <stack module="module.framework.sf_comms_on_sf_uart_comms.439444512">
+        <stack module="module.driver.uart_on_sci_uart.1616968626" requires="module.framework.sf_comms_on_sf_uart_comms.requires.uart">
+          <stack module="module.driver.transfer_on_dtc.577775218" requires="module.driver.uart_on_sci_uart.requires.transfer_tx"/>
         </stack>
       </stack>
     </context>

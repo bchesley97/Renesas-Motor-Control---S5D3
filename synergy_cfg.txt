@@ -301,66 +301,11 @@ Synergy Configuration
         Direction Reversed: False
         Pos Capture Trigger: 1
         
-    Instance "g_sf_motion2 Motion Control Framework on sf_motion"
-      Name: g_sf_motion2
-      Velocity Profile: Trapeziodal
-      Phasing Mode: Brute Force Method
-      Phasing Time[ms]: 500
-      Phasing Power: 3000
-      Auto Stop Mode: Smooth
-      PID Parameters: Set the fields below
-          KP: 20
-          KI: 20
-          KD: 500
-          IL: 300
-          DS: 100
-      Pos Err Limit [ec]: 1000
-      Pos Err Time [ms]: 100
-      Out Amp Enable: IOPORT_PORT_03_PIN_05
-      In Amp Fault: IOPORT_PORT_06_PIN_06
-      Hall Sensor U: 0
-      Hall Sensor V: 0
-      Hall Sensor W: 0
-      Brake Out: 0
-      Callback: NULL
-      
-      Instance "g_r_motor_bldc2 BLDC Motor Driver on r_motor"
-        Name: g_r_motor_bldc2
-        Motor Parameters: Set the fields below
-            Pole Pairs: 4
-            Inductance [uH]: 1200
-            Back EMF [V/krpm]: 15
-            Bus Voltage [V]: 24
-        Commutation Mode: Sinusoidal
-        Control Mode: Voltage Control
-        PWM Output Mode: Independent A
-        GPT Channel U: 0
-        GPT Channel V: 1
-        GPT Channel W: 2
-        PWM Carrier Frequency [KHz]: 60
-        Dead Time [us]: 0
-        ADC Channel U: 0
-        ADC Channel V: 1
-        ADC Range [mA]: 15000
-        Current Limit [mA]: 6000
-        Current Limit Time [ms]: 100
-        IQ KP: 100
-        IQ KI: 100
-        ID KP: 100
-        ID KI: 100
-        
-      Instance "g_r_encoder_gpt2 Incremental Encoder Driver on r_encoder"
-        Name: g_r_encoder_gpt2
-        GPT Channel: 8
-        Counts/Revolution: 4000
-        Direction Reversed: False
-        Pos Capture Trigger: 1
-        
   Thread "PWM Thread"
     Symbol: pwm_ctrl_thread
     Name: PWM Thread
     Stack size (bytes): 1024
-    Priority: 4
+    Priority: 7
     Auto start: Enabled
     Time slicing interval (ticks): 1
     
@@ -368,19 +313,19 @@ Synergy Configuration
     Symbol: uart_thread
     Name: Uart Thread
     Stack size (bytes): 1024
-    Priority: 7
+    Priority: 6
     Auto start: Enabled
     Time slicing interval (ticks): 1
     
     Instance "g_sf_uart Communications Framework on sf_uart_comms"
       Name: g_sf_uart
-      Name of generated initialization function: sf_comms_init0
+      Name of generated initialization function: sf_comms_init1
       Auto Initialization: Enable
       
-      Instance "g_uart0 UART Driver on r_sci_uart"
-        Name: g_uart0
+      Instance "g_uart1 UART Driver on r_sci_uart"
+        Name: g_uart1
         Channel: 8
-        Baud Rate: 9600
+        Baud Rate: 115200
         Data Bits: 8bits
         Parity: None
         Stop Bits: 1bit
@@ -393,13 +338,13 @@ Synergy Configuration
         Noise Cancel: Disable
         Bit Rate Modulation Enable: Enable
         Receive FIFO Trigger Level: Max
-        Receive Interrupt Priority: Priority 12
-        Transmit Interrupt Priority: Priority 12
-        Transmit End Interrupt Priority: Priority 12
+        Receive Interrupt Priority: Priority 0 (highest)
+        Transmit Interrupt Priority: Priority 0 (highest)
+        Transmit End Interrupt Priority: Priority 0 (highest)
         Error Interrupt Priority: Disabled
         
-        Instance "g_transfer0 Transfer Driver on r_dtc Event SCI8 TXI"
-          Name: g_transfer0
+        Instance "g_transfer1 Transfer Driver on r_dtc Event SCI8 TXI"
+          Name: g_transfer1
           Mode: Normal
           Transfer Size: 1 Byte
           Destination Address Mode: Fixed

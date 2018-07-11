@@ -36,11 +36,25 @@
 #include "common_data.h"
 #include "ssp_features.h"
 
+
 /***** Ifdef to put isr in vector table *****/
+//#ifndef SSP_SUPPRESS_ADC_WINDOW_ISR
+//void adc_comp_isr (void);
+//#define SSP_SUPPRESS_ADC_WINDOW_ISR
+//SSP_VECTOR_DEFINE_CHAN(adc_comp_isr, ADC, WINDOW_A, 0);
+//#endif
+
 #ifndef SSP_SUPPRESS_ADC_WINDOW_ISR
 void adc_comp_isr (void);
 #define SSP_SUPPRESS_ADC_WINDOW_ISR
-SSP_VECTOR_DEFINE_CHAN(adc_comp_isr, ADC, WINDOW_A, 0);
+SSP_VECTOR_DEFINE_CHAN(adc_comp_isr, ADC, SCAN_END, 0);
+#endif
+
+//isr for timer delay after zero cross detection
+#ifndef SSP_SUPPRESS_TIMER_DELAY_ISR
+void timer_change_commut_isr(void);
+#define SSP_SUPPRESS_TIMER_DELAY_ISR
+SSP_VECTOR_DEFINE_CHAN(timer_change_commut_isr, GPT, COUNTER_OVERFLOW, 4);
 #endif
 
 
@@ -83,6 +97,7 @@ uint32_t dtc_vect_table[] = { 0x20010000};
 
 const uint32_t * table_address = 0x20000000;
 extern motor_instance_t const *g_motors[16];
+
 
 //global variables for setting DTC transfer for changing comparator input
 uint8_t cmpctl_coe_0 = 0b10011000; //COE bit is bit 1
@@ -161,7 +176,28 @@ const motor_api_t g_motor_bldc =
 extern void (*sf_callback)(void);
 extern bool irq_handler_set;
 
+void configure_comparator_delay_gpt(void)
+{
+    //using GPT32E (channel 4)
+    R_GPTA4->GTCR_b.MD = 0b001; //saw wave one shot pulse mode
+    R_GPTA4->GTCR_b.TPCS = 0; //pclkD/1 prescaler
+    R_GPTA4->GTPR = 101333; //844us delay after first detection, as this is pi/3 of the electrical angular speed when control switches from open to close loop (1973 RPM)
 
+    ///create ISR
+//     ssp_feature_t ssp_feature = {{(ssp_ip_t) 0}};
+//     ssp_feature.channel = 0;
+//     ssp_feature.unit = 0U;
+//     ssp_feature.id = SSP_IP_GPT;
+//
+//     fmi_event_info_t event_info = {(IRQn_Type) 0U};
+//     g_fmi_on_fmi.eventInfoGet(&ssp_feature,  SSP_SIGNAL_GPT_COUNTER_OVERFLOW, &event_info);
+//     NVIC_SetPriority(event_info.irq, 1);
+//
+//     R_BSP_IrqStatusClear(event_info.irq);
+//     NVIC_ClearPendingIRQ(event_info.irq);
+//     NVIC_EnableIRQ(event_info.irq);
+
+}
 
 //function to change duty cycle of waveform
 void change_pwm_duty(float duty_cycle_percent)
@@ -170,9 +206,9 @@ void change_pwm_duty(float duty_cycle_percent)
     {
         return; //basic parameter checking
     }
-    uint32_t duty_value_ticks = g_motors[1]->p_ctrl->pwm_period - (uint32_t)(((float)g_motors[1]->p_ctrl->pwm_period * duty_cycle_percent)/100.0f);
+    uint32_t duty_value_ticks = g_motors[0]->p_ctrl->pwm_period - (uint32_t)(((float)g_motors[0]->p_ctrl->pwm_period * duty_cycle_percent)/100.0f);
 
-    motor_ctrl_t * const p_ctrl = g_motors[1]->p_ctrl;
+    motor_ctrl_t * const p_ctrl = g_motors[0]->p_ctrl;
 
     //this function changes the pwm of all three GPT timers used (for each phase)
     p_ctrl->p_gpt_u->GTDTCR_b.TDE = 0; //set this value zero so new GTDVU value updated when TDE bit set to 1
@@ -882,8 +918,8 @@ static inline void enable_adc_timer()
      R_S12ADC0->ADCMPANSR0 = 0x0007;
 
      //0.22 V is 272.067V, so low reference value is 271, upper side is 273
-     R_S12ADC0->ADCMPDR0_b.ADCMPDR0 = 270;  //in 12 bit mode, low reference
-     R_S12ADC0->ADCMPDR1_b.ADCMPDR1 = 276; //upper reference
+     R_S12ADC0->ADCMPDR0_b.ADCMPDR0 = 540;  //in 12 bit mode, low reference
+     R_S12ADC0->ADCMPDR1_b.ADCMPDR1 = 552; //upper reference
 
 
      R_S12ADC0->ADCMPCR_b.CMPAB = 0; //output adc120_WCMPM when window A or window B comparision conditions met. otherwise output adc120_WCMPUM
@@ -902,29 +938,48 @@ static inline void enable_adc_timer()
      R_S12ADC0->ADCMPLR0_b.CMPLCHA02 = 1;
      R_S12ADC0->ADCMPLR0 = 0x0007; //ADCMPDR0 < value < ADCMPDR1 for ch0,1,2
 
-     R_S12ADC0->ADPGACR = 0x9999;
-     R_S12ADC0->ADPGADCR0 = 0;
-
-     //wait 1us
-    // R_S12ADC0->ADANSA0 = 0x0007;
 
 
      //link with ELC
      R_ELC->ELSRnRC0[8].ELSRn_b.ELS = 0xB8; //ELC_AD00 register connected to A/D converter start request A
 
-     //enable interrupt when the window compare match occurs
-     ssp_feature_t ssp_feature = {{(ssp_ip_t) 0}};
-     ssp_feature.channel = 0;
-     ssp_feature.unit = 0U;
-     ssp_feature.id = SSP_IP_ADC;
+//     //enable interrupt when the window compare match occurs
+     ///THIS IS DONE IN THE OPEN LOOP INTERRUPT NOW
+//     ssp_feature_t ssp_feature = {{(ssp_ip_t) 0}};
+//     ssp_feature.channel = 0;
+//     ssp_feature.unit = 0U;
+//     ssp_feature.id = SSP_IP_ADC;
+//
+//     fmi_event_info_t event_info = {(IRQn_Type) 0U};
+//     g_fmi_on_fmi.eventInfoGet(&ssp_feature, SSP_SIGNAL_ADC_WINDOW_A, &event_info);
+//     NVIC_SetPriority(event_info.irq, 2);
+//
+//     R_BSP_IrqStatusClear(event_info.irq);
+//     NVIC_ClearPendingIRQ(event_info.irq);
+//     NVIC_EnableIRQ(event_info.irq);
 
-     fmi_event_info_t event_info = {(IRQn_Type) 0U};
-     g_fmi_on_fmi.eventInfoGet(&ssp_feature, SSP_SIGNAL_ADC_WINDOW_A, &event_info);
-     NVIC_SetPriority(event_info.irq, 2);
 
-     R_BSP_IrqStatusClear(event_info.irq);
-     NVIC_ClearPendingIRQ(event_info.irq);
-     NVIC_EnableIRQ(event_info.irq);
+     R_S12ADC0->ADPGAGS0_b.P000GAIN = 0b0000; //gain of x2
+     R_S12ADC0->ADPGAGS0_b.P001GAIN = 0b0000; //gain of x2
+     R_S12ADC0->ADPGAGS0_b.P002GAIN = 0b0000; //gain of x2
+
+     R_S12ADC0->ADPGADCR0 = 0; //disable differential input
+     //enable PGA
+     R_S12ADC0->ADPGACR = 0b0000111011101110; //enable all three pgas
+
+         //enable interrupt when conversion complete, FOR DEBUG PURPOSES ONLY
+         ssp_feature_t ssp_feature = {{(ssp_ip_t) 0}};
+         ssp_feature.channel = 0;
+         ssp_feature.unit = 0U;
+         ssp_feature.id = SSP_IP_ADC;
+
+         fmi_event_info_t event_info = {(IRQn_Type) 0U};
+         g_fmi_on_fmi.eventInfoGet(&ssp_feature, SSP_SIGNAL_ADC_SCAN_END, &event_info);
+         NVIC_SetPriority(event_info.irq, 2);
+
+         R_BSP_IrqStatusClear(event_info.irq);
+         NVIC_ClearPendingIRQ(event_info.irq);
+         NVIC_EnableIRQ(event_info.irq);
 }
 
 
@@ -1008,7 +1063,7 @@ ssp_err_t R_Motor_BLDC_Open (motor_ctrl_t * const p_ctrl, motor_cfg_t * const p_
 
     //set the initial values for open loop control
     p_mtr_pattern_ctrl->vel_accel.velocity = 1000; //velocity is in terms of PWM counts, more counts the slower. Starting at 500 counts
-    p_mtr_pattern_ctrl->vel_accel.acceleration = 2; //initial rate to accelerate at
+    p_mtr_pattern_ctrl->vel_accel.acceleration = 5; //initial rate to accelerate at
     p_mtr_pattern_ctrl->ctrl_type = OPEN_LOOP_CONTROL; //initially starting, use open loop control till back EMF strong enough to sense with comparator
     p_mtr_pattern_ctrl->p_trap_pattern = &trap_pattern[0];
 
@@ -1037,6 +1092,7 @@ ssp_err_t R_Motor_BLDC_Open (motor_ctrl_t * const p_ctrl, motor_cfg_t * const p_
             NVIC_EnableIRQ(p_ctrl->irq);
 
             enable_adc_timer();
+            configure_comparator_delay_gpt();
 
             /* enable the DTC linked with the ELC for closed loop control */
            //enable_dtc_elc(p_ctrl); //enable dtc only for one motor
@@ -1069,6 +1125,7 @@ ssp_err_t R_Motor_BLDC_Open (motor_ctrl_t * const p_ctrl, motor_cfg_t * const p_
 
         change_pwm_duty(1); //change duty cycle to one percent
 
+
         //set registers such that the first waveform displayed via PWM is the FIRST waveform
         p_ctrl->p_gpt_u->GTUDDTYC = pin_ctrl_u[0];
         p_ctrl->p_gpt_v->GTUDDTYC = pin_ctrl_v[0];
@@ -1096,8 +1153,8 @@ ssp_err_t R_Motor_BLDC_Open (motor_ctrl_t * const p_ctrl, motor_cfg_t * const p_
 void reset_command()
 {
 
-    motor_ctrl_t * const p_ctrl = g_motors[1]->p_ctrl;
-    motor_cfg_t * const p_cfg = g_motors[1]->p_cfg;
+    motor_ctrl_t * const p_ctrl = g_motors[0]->p_ctrl;
+    motor_cfg_t * const p_cfg = g_motors[0]->p_cfg;
 
     p_mtr_pattern_ctrl->vel_accel.velocity = 1000; //velocity is in terms of PWM counts, more counts the slower. Starting at 500 counts
     p_mtr_pattern_ctrl->vel_accel.acceleration = 2; //initial rate to accelerate at
@@ -1117,6 +1174,7 @@ void reset_command()
 
 
     enable_adc_timer();
+    configure_comparator_delay_gpt();
     R_S12ADC0->ADCMPCR_b.CMPAE = 0;
     R_S12ADC0->ADANSA0 = 0x0000; //turn off adc input
     R_S12ADC0->ADCMPCR_b.CMPAE = 1;

@@ -19,12 +19,12 @@ extern "C"
 {
 #endif
 /* Transfer on DTC Instance. */
-extern const transfer_instance_t g_transfer0;
+extern const transfer_instance_t g_transfer1;
 #ifndef NULL
 void NULL(transfer_callback_args_t *p_args);
 #endif
 /** UART on SCI Instance. */
-extern const uart_instance_t g_uart0;
+extern const uart_instance_t g_uart1;
 #ifdef NULL
 #else
 extern void NULL(uint32_t channel, uint32_t level);
@@ -35,7 +35,7 @@ void NULL(uart_callback_args_t *p_args);
 /* UART Communications Framework Instance. */
 extern const sf_comms_instance_t g_sf_uart;
 void g_sf_uart_err_callback(void *p_instance, void *p_data);
-void sf_comms_init0(void);
+void sf_comms_init1(void);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
